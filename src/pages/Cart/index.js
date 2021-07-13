@@ -1,39 +1,39 @@
-import React,{useState} from 'react';
+import React,{useState,useMemo} from 'react';
+import {useSelector,useDispatch} from 'react-redux';
 import { View } from 'react-native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
+import EmptyCart from '../../components/EmptyCart';
+
+import * as CartActions from '../../store/modules/cart/actions';
 
 import formatValue from '../../utils/formatValue';
 
 import * as S from './styles';
 
 export default function Cart() {
-  const [products,setProducts] = useState([{
-    id:'1',
-    title:'Assinatura Trimestral',
-    image_url:'https://res.cloudinary.com/robertosousa1/image/upload/v1594492578/dio/quarterly_subscription_yjolpc.png',
-    quantidade:1,
-    price:150,
-  },
-  {
-   id:'2',
-   title:'Assinatura Trimestral',
-   image_url:'https://res.cloudinary.com/robertosousa1/image/upload/v1594492578/dio/quarterly_subscription_yjolpc.png',
-   quantidade:2,
-   price:150,
- },
- {
-   id:'3',
-   title:'Assinatura Trimestral',
-   image_url:'https://res.cloudinary.com/robertosousa1/image/upload/v1594492578/dio/quarterly_subscription_yjolpc.png',
-   quantidade:3,
-   price:150,
- }])
+  const dispatch = useDispatch();
+  const products = useSelector(({cart}) => cart);
+
+ const cartSize = useMemo(() => {
+   return products.length || 0;
+ },[products])
+
+
+ const cartTotal = useMemo(() => {
+  const cartAmount = products.reduce((acc,product) => {
+    const totalPrice  = acc  +  product.price * product.amount
+    return totalPrice
+  },0 );
+  return formatValue(cartAmount) ;
+},[products])
+
  return (
     <S.Container>
       <S.ProductContainer>
         <S.ProductList
           data={products}
           keyExtractor={(item) => item.id }
+          ListEmptyComponent={<EmptyCart />}
           ListFooterComponent={<View />}
           ListHeaderComponentStyle={{height:80}}
           renderItem={({item}) => (
@@ -47,10 +47,10 @@ export default function Cart() {
                   </S.ProductSiglePrice>
                   <S.TotalContainer>
                     <S.ProductQuantidade>
-                      {`${item.quantidade}x`}
+                      {`${item.amount}x`}
                     </S.ProductQuantidade>
                     <S.ProductPrice>
-                      {formatValue(item.price * item.quantidade)}
+                      {formatValue(item.price * item.amount)}
                     </S.ProductPrice>
                   </S.TotalContainer>
                 </S.ProductPriceContainer>
@@ -71,6 +71,11 @@ export default function Cart() {
             )}
         />
       </S.ProductContainer>
+      <S.TotalProductsContainer>
+        <FeatherIcon name="shopping-cart" color="#fff" size={24} />
+        <S.TotalProductsText>{cartSize} {cartSize === 1 ? ' item' : ' itens'}  </S.TotalProductsText>
+        <S.SubTotalValue>{cartTotal}</S.SubTotalValue>
+      </S.TotalProductsContainer>
     </S.Container>
   );
 }
